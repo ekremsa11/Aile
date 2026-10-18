@@ -35,31 +35,6 @@
             z-index: 10;
         }
 
-        /* Şimdilik Hello Kitty Kafası (Görsel yerine) */
-        .kitty-head {
-            width: 180px;
-            height: 160px;
-            background: #fff;
-            border: 4px solid #e9c6db;
-            border-radius: 48% 48% 45% 45%;
-            position: relative;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-        }
-        .kitty-ear {
-            position: absolute; top: -20px; width: 60px; height: 70px;
-            background: #fff; border: 4px solid #e9c6db; z-index: -1;
-        }
-        .kitty-ear.left { left: 10px; transform: rotate(-24deg); border-radius: 15px 50px 12px 18px; }
-        .kitty-ear.right { right: 10px; transform: rotate(24deg); border-radius: 50px 15px 18px 12px; }
-        .kitty-eye { position: absolute; top: 70px; width: 12px; height: 18px; border-radius: 50%; background: #38313c; }
-        .kitty-eye.left { left: 50px; } .kitty-eye.right { right: 50px; }
-        .kitty-nose { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); width: 16px; height: 11px; border-radius: 50%; background: #f5c64b; }
-        .kitty-bow { position: absolute; right: -10px; top: -10px; width: 60px; height: 50px; z-index: 5; transform: rotate(10deg); }
-        .kitty-bow .loop { position: absolute; top: 5px; width: 30px; height: 35px; background: #ff8ac5; border: 3px solid #b93c7d; border-radius: 50%; }
-        .kitty-bow .loop.left { left: 0; } .kitty-bow .loop.right { right: 0; }
-        .kitty-bow .knot { position: absolute; top: 15px; left: 23px; width: 20px; height: 20px; border-radius: 50%; background: #ffb3d8; border: 3px solid #b93c7d; }
-
         /* Kocaman Butonlar */
         .btn {
             width: 100%; padding: 25px; font-size: 28px; font-weight: 900; border: none;
@@ -98,14 +73,10 @@
 <body>
 
     <div class="container" id="main-menu">
-        <!-- Görsel: Hello Kitty -->
-        <div class="kitty-head">
-            <div class="kitty-ear left"></div><div class="kitty-ear right"></div>
-            <div class="kitty-eye left"></div><div class="kitty-eye right"></div>
-            <div class="kitty-nose"></div>
-            <div class="kitty-bow">
-                <div class="loop left"></div><div class="loop right"></div><div class="knot"></div>
-            </div>
+        
+        <!-- BABA VE KIZ FOTOĞRAFI (Buradaki baba.jpg kısmını kendi resminin adıyla değiştir) -->
+        <div style="width: 180px; height: 180px; border-radius: 50%; overflow: hidden; border: 5px solid #ff83bf; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+            <img src="baba.jpg" alt="Babam" style="width: 100%; height: 100%; object-fit: cover;">
         </div>
         
         <!-- Kızının tableti için (Arayan) -->
@@ -144,7 +115,7 @@
         // --- KONUŞMA (TTS) MOTORU ---
         function speak(text, callback) {
             if ("speechSynthesis" in window) {
-                window.speechSynthesis.cancel(); // Önceki sesi kes
+                window.speechSynthesis.cancel();
                 const u = new SpeechSynthesisUtterance(text);
                 u.lang = "tr-TR";
                 u.rate = 0.9;
@@ -217,7 +188,6 @@
             await peerConnection.setLocalDescription(offerDescription);
             await set(callDocRef, { offer: { sdp: offerDescription.sdp, type: offerDescription.type } });
 
-            // 15 Saniye içinde açılmazsa iptal et
             callTimeout = setTimeout(() => {
                 if (peerConnection && !peerConnection.currentRemoteDescription) {
                     speak("Baban telefonu açmadı. Daha sonra tekrar dene.");
