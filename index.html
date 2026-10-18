@@ -35,6 +35,22 @@
             z-index: 10;
         }
 
+        /* Fotoğraf Çerçevesi */
+        .photo-frame {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 5px solid #ff83bf;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         /* Kocaman Butonlar */
         .btn {
             width: 100%; padding: 25px; font-size: 28px; font-weight: 900; border: none;
@@ -74,9 +90,9 @@
 
     <div class="container" id="main-menu">
         
-        <!-- BABA VE KIZ FOTOĞRAFI (Buradaki baba.jpg kısmını kendi resminin adıyla değiştir) -->
-        <div style="width: 180px; height: 180px; border-radius: 50%; overflow: hidden; border: 5px solid #ff83bf; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-            <img src="baba.jpg" alt="Babam" style="width: 100%; height: 100%; object-fit: cover;">
+        <!-- BABA VE KIZ FOTOĞRAFI -->
+        <div class="photo-frame">
+            <img src="20260616_141549.jpg" alt="Babam">
         </div>
         
         <!-- Kızının tableti için (Arayan) -->
