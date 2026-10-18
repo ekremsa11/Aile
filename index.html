@@ -7,51 +7,26 @@
     <style>
         * { box-sizing: border-box; }
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background: radial-gradient(circle at 50% 20%, #fffafd, #ffe3f1 58%, #f9c9e2);
             font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100dvh;
-            color: #5c3155;
-            text-align: center;
-            overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100dvh; color: #5c3155; text-align: center; overflow: hidden;
         }
         
         .container {
-            background: white;
-            padding: 20px;
-            border-radius: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border: 4px solid #ffcce5;
-            z-index: 10;
+            background: white; padding: 20px; border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 90%; max-width: 400px;
+            display: flex; flex-direction: column; align-items: center;
+            border: 4px solid #ffcce5; z-index: 10;
         }
 
-        /* Fotoğraf Çerçevesi */
         .photo-frame {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 5px solid #ff83bf;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            width: 180px; height: 180px; border-radius: 50%; overflow: hidden;
+            border: 5px solid #ff83bf; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        .photo-frame img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Butonlar */
         .btn {
             width: 100%; padding: 25px; font-size: 28px; font-weight: 900; border: none;
             border-radius: 25px; cursor: pointer; transition: all 0.1s;
@@ -65,19 +40,12 @@
         
         /* Gelen Arama Butonları */
         .answer-buttons {
-            display: none; 
-            width: 100%;
-            gap: 15px;
-            justify-content: center;
+            display: none; width: 100%; gap: 15px; justify-content: center;
             animation: pulse 1.5s infinite;
         }
         
-        .btn-answer {
-            background: #22c55e; color: white; box-shadow: 0 8px 0 #16a34a; flex: 1;
-        }
-        .btn-reject {
-            background: #ef4444; color: white; box-shadow: 0 8px 0 #b91c1c; flex: 1;
-        }
+        .btn-answer { background: #22c55e; color: white; box-shadow: 0 8px 0 #16a34a; flex: 1; font-size: 24px; }
+        .btn-reject { background: #ef4444; color: white; box-shadow: 0 8px 0 #b91c1c; flex: 1; font-size: 24px; }
         
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
@@ -103,7 +71,6 @@
 
     <div class="container" id="main-menu">
         
-        <!-- BABA VE KIZ FOTOĞRAFI -->
         <div class="photo-frame">
             <img src="20260616_141549.jpg" alt="Babam">
         </div>
@@ -113,11 +80,16 @@
         
         <!-- Senin telefonun için (Aranan) -->
         <div class="answer-buttons" id="answer-buttons">
-            <button class="btn btn-reject" onclick="rejectCall()">❌</button>
+            <button class="btn btn-reject" onclick="rejectCall()">❌ REDDET</button>
             <button class="btn btn-answer" onclick="answerCall()">📞 AÇ</button>
         </div>
         
         <p id="status-text" style="margin-top: 20px; font-weight: bold; color: #a3427d; font-size: 16px;">Hazır</p>
+        
+        <!-- SES İZNİ BUTONU (Sadece telefonda görünecek) -->
+        <button id="enable-sound-btn" onclick="enableSound()" style="display: none; margin-top: 15px; padding: 10px 20px; background: #7250a8; color: white; border: none; border-radius: 10px; font-weight: bold;">
+            🔔 Sesi ve Titreşimi Etkinleştir
+        </button>
     </div>
 
     <!-- Görüntülü Konuşma Ekranı -->
@@ -144,53 +116,58 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- SES (TTS) MOTORU ---
         function speak(text, callback) {
             if ("speechSynthesis" in window) {
                 window.speechSynthesis.cancel();
                 const u = new SpeechSynthesisUtterance(text);
-                u.lang = "tr-TR";
-                u.rate = 0.9;
-                u.pitch = 1.1;
+                u.lang = "tr-TR"; u.rate = 0.9; u.pitch = 1.1;
                 if (callback) u.onend = callback;
                 window.speechSynthesis.speak(u);
-            } else {
-                if (callback) callback();
-            }
+            } else { if (callback) callback(); }
         }
 
-        // --- ZİL SESİ MOTORU ---
+        // --- SES İZİN SİSTEMİ ---
+        let audioCtx = null;
+        function enableSound() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            document.getElementById('enable-sound-btn').style.display = 'none';
+            playRingtone(); // Test için bir kere çal
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            statusText.innerText = "Sesler hazır! Zeynep'i bekliyorum...";
+        }
+
         let ringtoneInterval;
         function playRingtone() {
-            // Tarayıcıların otomatik ses çalmasını engellememesi için basit bir osilatör zili
+            if (!audioCtx || audioCtx.state === 'suspended') return;
             try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
+                osc.connect(gain); gain.connect(audioCtx.destination);
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, audioCtx.currentTime); 
-                
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(480, audioCtx.currentTime + 0.2);
                 gain.gain.setValueAtTime(0, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-                
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.5);
+                gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
             } catch(e) {}
         }
         
         function startRinging() {
             playRingtone();
             ringtoneInterval = setInterval(playRingtone, 1000);
-            if (navigator.vibrate) navigator.vibrate([1000, 1000, 1000, 1000, 1000]); // Titreşim
+            if (navigator.vibrate) {
+                // Titreşim deseni: 1 saniye titret, yarım saniye dur...
+                navigator.vibrate([1000, 500, 1000, 500, 1000, 500, 1000]); 
+            }
         }
         
         function stopRinging() {
             clearInterval(ringtoneInterval);
-            if (navigator.vibrate) navigator.vibrate(0); // Titreşimi durdur
+            if (navigator.vibrate) navigator.vibrate(0);
         }
 
         // --- WebRTC Değişkenleri ---
@@ -216,17 +193,15 @@
                 localVideo.srcObject = localStream;
                 return true;
             } catch (e) {
-                speak("Kamera veya mikrofon izni verilmedi. Lütfen izin verin.");
+                speak("Kamera veya mikrofon izni verilmedi.");
                 alert("Kamera veya mikrofon izni verilmedi!");
                 return false;
             }
         }
 
-        // --- ARAMA BAŞLATAN (Kızının Tableti) ---
         window.startCall = async function() {
             statusText.innerText = "Kamera açılıyor...";
             speak("Baban aranıyor, lütfen bekle.");
-            
             const ready = await startCamera();
             if (!ready) return;
 
@@ -235,7 +210,6 @@
             callBtn.style.opacity = "0.5";
 
             peerConnection = new RTCPeerConnection(servers);
-            
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
             peerConnection.ontrack = (event) => {
@@ -254,7 +228,6 @@
             await peerConnection.setLocalDescription(offerDescription);
             await set(callDocRef, { offer: { sdp: offerDescription.sdp, type: offerDescription.type } });
 
-            // 15 Saniye içinde açılmazsa veya reddedilirse
             callTimeout = setTimeout(() => {
                 if (peerConnection && !peerConnection.currentRemoteDescription) {
                     speak("Baban telefonu açmadı. Daha sonra tekrar dene.");
@@ -284,7 +257,6 @@
             });
         };
 
-        // --- ARAMAYI YANITLAYAN (Senin Telefonun) ---
         window.answerCall = async function() {
             stopRinging();
             statusText.innerText = "Kamera açılıyor...";
@@ -298,7 +270,6 @@
             speak("Arama açıldı.");
 
             peerConnection = new RTCPeerConnection(servers);
-
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
             peerConnection.ontrack = (event) => {
@@ -329,19 +300,17 @@
             });
         };
 
-        // --- ARAMAYI REDDET ---
         window.rejectCall = async function() {
             stopRinging();
             statusText.innerText = "Reddedildi.";
             answerButtons.style.display = 'none';
-            await set(callDocRef, { rejected: true }); // Karşı tarafa reddedildi bilgisini gönder
+            await set(callDocRef, { rejected: true }); 
             setTimeout(() => {
-                remove(callDocRef); // 2 saniye sonra odayı temizle
+                remove(callDocRef);
                 statusText.innerText = "Bekleniyor...";
             }, 2000);
         };
 
-        // --- ARAMAYI KAPAT ---
         window.endCall = async function() {
             stopRinging();
             if(callTimeout) clearTimeout(callTimeout);
@@ -358,7 +327,6 @@
             callBtn.disabled = false;
             callBtn.style.opacity = "1";
             statusText.innerText = "Hazır";
-            
             answerButtons.style.display = 'none';
             callBtn.style.display = 'flex';
         };
@@ -368,18 +336,18 @@
         
         if (isReceiver) {
             callBtn.style.display = 'none';
-            statusText.innerText = "Bekleniyor...";
-            speak("Telefon hazır. Zeynep'i bekliyorum.");
+            document.getElementById('enable-sound-btn').style.display = 'block'; // Sesi açma butonunu göster
+            statusText.innerText = "Lütfen sesi etkinleştirin";
             
             onValue(callDocRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.offer && !data.answer && !data.rejected) {
                     statusText.innerText = "Zeynep arıyor!";
-                    answerButtons.style.display = 'flex'; // Aç ve Reddet butonlarını göster
+                    answerButtons.style.display = 'flex';
                     
                     if (!window.isRinging) {
                         window.isRinging = true;
-                        startRinging(); // Zil sesini başlat
+                        startRinging();
                         speak("Zeynep seni arıyor.");
                     }
                 } else {
@@ -387,6 +355,7 @@
                     if (window.isRinging) {
                         stopRinging();
                         window.isRinging = false;
+                        statusText.innerText = "Bekleniyor...";
                     }
                 }
             });
