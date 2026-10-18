@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zeynep Arıyor</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at 50% 20%, #fffafd, #ffe3f1 58%, #f9c9e2);
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100dvh;
+            color: #5c3155;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 4px solid #ffcce5;
+            z-index: 10;
+        }
+
+        /* Şimdilik Hello Kitty Kafası (Görsel yerine) */
+        .kitty-head {
+            width: 180px;
+            height: 160px;
+            background: #fff;
+            border: 4px solid #e9c6db;
+            border-radius: 48% 48% 45% 45%;
+            position: relative;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .kitty-ear {
+            position: absolute; top: -20px; width: 60px; height: 70px;
+            background: #fff; border: 4px solid #e9c6db; z-index: -1;
+        }
+        .kitty-ear.left { left: 10px; transform: rotate(-24deg); border-radius: 15px 50px 12px 18px; }
+        .kitty-ear.right { right: 10px; transform: rotate(24deg); border-radius: 50px 15px 18px 12px; }
+        .kitty-eye { position: absolute; top: 70px; width: 12px; height: 18px; border-radius: 50%; background: #38313c; }
+        .kitty-eye.left { left: 50px; } .kitty-eye.right { right: 50px; }
+        .kitty-nose { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); width: 16px; height: 11px; border-radius: 50%; background: #f5c64b; }
+        .kitty-bow { position: absolute; right: -10px; top: -10px; width: 60px; height: 50px; z-index: 5; transform: rotate(10deg); }
+        .kitty-bow .loop { position: absolute; top: 5px; width: 30px; height: 35px; background: #ff8ac5; border: 3px solid #b93c7d; border-radius: 50%; }
+        .kitty-bow .loop.left { left: 0; } .kitty-bow .loop.right { right: 0; }
+        .kitty-bow .knot { position: absolute; top: 15px; left: 23px; width: 20px; height: 20px; border-radius: 50%; background: #ffb3d8; border: 3px solid #b93c7d; }
+
+        /* Kocaman Butonlar */
+        .btn {
+            width: 100%; padding: 25px; font-size: 28px; font-weight: 900; border: none;
+            border-radius: 25px; cursor: pointer; transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        .btn-call {
+            background: #4ade80; color: white; box-shadow: 0 8px 0 #22c55e; font-size: 32px;
+        }
+        .btn-answer {
+            background: #22c55e; color: white; box-shadow: 0 8px 0 #16a34a;
+            display: none; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* Görüntülü Görüşme Ekranı */
+        #video-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 1000; flex-direction: column;
+        }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; }
+        #local-video {
+            position: absolute; bottom: 100px; right: 20px; width: 100px; height: 150px;
+            object-fit: cover; border-radius: 15px; border: 3px solid white; z-index: 1001;
+        }
+        .end-call-btn {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: #ef4444; color: white; border: none; width: 70px; height: 70px;
+            border-radius: 50%; font-size: 30px; cursor: pointer; z-index: 1002;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="main-menu">
+        <!-- Görsel: Hello Kitty -->
+        <div class="kitty-head">
+            <div class="kitty-ear left"></div><div class="kitty-ear right"></div>
+            <div class="kitty-eye left"></div><div class="kitty-eye right"></div>
+            <div class="kitty-nose"></div>
+            <div class="kitty-bow">
+                <div class="loop left"></div><div class="loop right"></div><div class="knot"></div>
+            </div>
+        </div>
+        
+        <!-- Kızının tableti için (Arayan) -->
+        <button class="btn btn-call" id="call-btn" onclick="startCall()">📞 ARA</button>
+        
+        <!-- Senin telefonun için (Yanıtlayan) -->
+        <button class="btn btn-answer" id="answer-btn" onclick="answerCall()">📞 AÇ</button>
+        
+        <p id="status-text" style="margin-top: 20px; font-weight: bold; color: #a3427d; font-size: 16px;">Hazır</p>
+    </div>
+
+    <!-- Görüntülü Konuşma Ekranı -->
+    <div id="video-screen">
+        <video id="remote-video" autoplay playsinline></video>
+        <video id="local-video" autoplay playsinline muted></video>
+        <button class="end-call-btn" onclick="endCall()">❌</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJttoH3cuIWpXVtng8-wDDvRK-4fUfdeg",
+            authDomain: "aile-6bc26.firebaseapp.com",
+            databaseURL: "https://aile-6bc26-default-rtdb.firebaseio.com",
+            projectId: "aile-6bc26",
+            storageBucket: "aile-6bc26.firebasestorage.app",
+            messagingSenderId: "983078672524",
+            appId: "1:983078672524:web:85a05ff194f3fcde7343a9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- KONUŞMA (TTS) MOTORU ---
+        function speak(text, callback) {
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel(); // Önceki sesi kes
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = "tr-TR";
+                u.rate = 0.9;
+                u.pitch = 1.1;
+                if (callback) u.onend = callback;
+                window.speechSynthesis.speak(u);
+            } else {
+                if (callback) callback();
+            }
+        }
+
+        // --- WebRTC Değişkenleri ---
+        let localStream = null;
+        let peerConnection = null;
+        let callTimeout = null;
+        const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
+
+        const callBtn = document.getElementById('call-btn');
+        const answerBtn = document.getElementById('answer-btn');
+        const statusText = document.getElementById('status-text');
+        const videoScreen = document.getElementById('video-screen');
+        const localVideo = document.getElementById('local-video');
+        const remoteVideo = document.getElementById('remote-video');
+
+        const callDocRef = ref(db, 'arama/zeynep-odasi');
+        const offerCandidates = ref(db, 'arama/zeynep-odasi/offerCandidates');
+        const answerCandidates = ref(db, 'arama/zeynep-odasi/answerCandidates');
+
+        async function startCamera() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                localVideo.srcObject = localStream;
+                return true;
+            } catch (e) {
+                speak("Kamera veya mikrofon izni verilmedi. Lütfen izin verin.");
+                alert("Kamera veya mikrofon izni verilmedi!");
+                return false;
+            }
+        }
+
+        // --- ARAMA BAŞLATAN (Kızının Tableti) ---
+        window.startCall = async function() {
+            statusText.innerText = "Kamera açılıyor...";
+            speak("Baban aranıyor, lütfen bekle.");
+            
+            const ready = await startCamera();
+            if (!ready) return;
+
+            statusText.innerText = "Baban aranıyor...";
+            callBtn.disabled = true;
+            callBtn.style.opacity = "0.5";
+
+            peerConnection = new RTCPeerConnection(servers);
+            
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            peerConnection.ontrack = (event) => {
+                remoteVideo.srcObject = event.streams[0];
+                videoScreen.style.display = 'flex';
+                if(callTimeout) clearTimeout(callTimeout);
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    set(ref(db, 'arama/zeynep-odasi/offerCandidates/' + Date.now()), event.candidate.toJSON());
+                }
+            };
+
+            const offerDescription = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offerDescription);
+            await set(callDocRef, { offer: { sdp: offerDescription.sdp, type: offerDescription.type } });
+
+            // 15 Saniye içinde açılmazsa iptal et
+            callTimeout = setTimeout(() => {
+                if (peerConnection && !peerConnection.currentRemoteDescription) {
+                    speak("Baban telefonu açmadı. Daha sonra tekrar dene.");
+                    statusText.innerText = "Açılmadı, iptal edildi.";
+                    endCall();
+                }
+            }, 15000);
+
+            onValue(callDocRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.answer && peerConnection && !peerConnection.currentRemoteDescription) {
+                    peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    statusText.innerText = "Bağlantı kuruldu!";
+                    speak("Bağlantı kuruldu.");
+                    if(callTimeout) clearTimeout(callTimeout);
+                }
+            });
+
+            onValue(answerCandidates, (snapshot) => {
+                snapshot.forEach((childSnapshot) => {
+                    peerConnection.addIceCandidate(new RTCIceCandidate(childSnapshot.val()));
+                });
+            });
+        };
+
+        // --- ARAMAYI YANITLAYAN (Senin Telefonun) ---
+        window.answerCall = async function() {
+            statusText.innerText = "Kamera açılıyor...";
+            if(callTimeout) clearTimeout(callTimeout);
+            
+            const ready = await startCamera();
+            if (!ready) return;
+
+            statusText.innerText = "Bağlanıyor...";
+            answerBtn.style.display = 'none';
+            speak("Arama açıldı.");
+
+            peerConnection = new RTCPeerConnection(servers);
+
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            peerConnection.ontrack = (event) => {
+                remoteVideo.srcObject = event.streams[0];
+                videoScreen.style.display = 'flex';
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    set(ref(db, 'arama/zeynep-odasi/answerCandidates/' + Date.now()), event.candidate.toJSON());
+                }
+            };
+
+            onValue(callDocRef, async (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.offer && !peerConnection.currentRemoteDescription) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                    const answerDescription = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answerDescription);
+                    await set(callDocRef, { ...data, answer: { type: answerDescription.type, sdp: answerDescription.sdp } });
+                    
+                    onValue(offerCandidates, (snap) => {
+                        snap.forEach((childSnapshot) => {
+                            peerConnection.addIceCandidate(new RTCIceCandidate(childSnapshot.val()));
+                        });
+                    });
+                }
+            });
+        };
+
+        // --- ARAMAYI KAPAT ---
+        window.endCall = async function() {
+            if(callTimeout) clearTimeout(callTimeout);
+            if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+
+            if (peerConnection) { peerConnection.close(); peerConnection = null; }
+            if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+            
+            videoScreen.style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+            
+            await remove(callDocRef);
+            
+            callBtn.disabled = false;
+            callBtn.style.opacity = "1";
+            statusText.innerText = "Hazır";
+            
+            answerBtn.style.display = 'none';
+            callBtn.style.display = 'flex';
+        };
+
+        // --- GELEN ARAMALARI DİNLE ---
+        const isReceiver = window.location.search.includes('receiver=true');
+        
+        if (isReceiver) {
+            callBtn.style.display = 'none';
+            statusText.innerText = "Bekleniyor...";
+            speak("Telefon hazır. Zeynep'i bekliyorum.");
+            
+            onValue(callDocRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.offer && !data.answer) {
+                    statusText.innerText = "Zeynep arıyor!";
+                    answerBtn.style.display = 'flex';
+                    
+                    if (!window.isRinging) {
+                        window.isRinging = true;
+                        speak("Zeynep seni arıyor. Açmak için yeşil butona bas.");
+                    }
+                } else {
+                    answerBtn.style.display = 'none';
+                    window.isRinging = false;
+                }
+            });
+        } else {
+            answerBtn.style.display = 'none';
+            statusText.innerText = "Hazır";
+        }
+    </script>
+</body>
+</html>
