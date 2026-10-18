@@ -28,24 +28,24 @@
         .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
 
         .btn {
-            width: 100%; padding: 25px; font-size: 28px; font-weight: 900; border: none;
+            width: 100%; padding: 20px; font-size: 24px; font-weight: 900; border: none;
             border-radius: 25px; cursor: pointer; transition: all 0.1s;
-            display: flex; align-items: center; justify-content: center; gap: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .btn:active { transform: scale(0.95); }
 
         .btn-call {
-            background: #4ade80; color: white; box-shadow: 0 8px 0 #22c55e; font-size: 32px;
+            background: #4ade80; color: white; box-shadow: 0 8px 0 #22c55e; margin-bottom: 10px;
         }
         
         /* Gelen Arama Butonları */
         .answer-buttons {
-            display: none; width: 100%; gap: 15px; justify-content: center;
-            animation: pulse 1.5s infinite;
+            display: none; width: 100%; gap: 10px; justify-content: center;
+            animation: pulse 1.5s infinite; margin-bottom: 10px;
         }
         
-        .btn-answer { background: #22c55e; color: white; box-shadow: 0 8px 0 #16a34a; flex: 1; font-size: 24px; }
-        .btn-reject { background: #ef4444; color: white; box-shadow: 0 8px 0 #b91c1c; flex: 1; font-size: 24px; }
+        .btn-answer { background: #22c55e; color: white; box-shadow: 0 8px 0 #16a34a; flex: 1; font-size: 20px;}
+        .btn-reject { background: #ef4444; color: white; box-shadow: 0 8px 0 #b91c1c; flex: 1; font-size: 20px;}
         
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
@@ -75,20 +75,20 @@
             <img src="20260616_141549.jpg" alt="Babam">
         </div>
         
-        <!-- Kızının tableti için (Arayan) -->
+        <!-- Herkes Arayabilir -->
         <button class="btn btn-call" id="call-btn" onclick="startCall()">📞 ARA</button>
         
-        <!-- Senin telefonun için (Aranan) -->
+        <!-- Gelen Arama Butonları (Sadece arama gelince çıkar) -->
         <div class="answer-buttons" id="answer-buttons">
             <button class="btn btn-reject" onclick="rejectCall()">❌ REDDET</button>
             <button class="btn btn-answer" onclick="answerCall()">📞 AÇ</button>
         </div>
         
-        <p id="status-text" style="margin-top: 20px; font-weight: bold; color: #a3427d; font-size: 16px;">Hazır</p>
+        <p id="status-text" style="margin-top: 10px; font-weight: bold; color: #a3427d; font-size: 14px;">Hazır</p>
         
-        <!-- SES İZNİ BUTONU (Sadece telefonda görünecek) -->
-        <button id="enable-sound-btn" onclick="enableSound()" style="display: none; margin-top: 15px; padding: 10px 20px; background: #7250a8; color: white; border: none; border-radius: 10px; font-weight: bold;">
-            🔔 Sesi ve Titreşimi Etkinleştir
+        <!-- SES İZNİ BUTONU -->
+        <button id="enable-sound-btn" onclick="enableSound()" style="display: none; margin-top: 10px; padding: 10px 20px; background: #7250a8; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: bold;">
+            🔔 Sesi ve Titreşimi Aç (İlk açılışta bas)
         </button>
     </div>
 
@@ -101,7 +101,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBJttoH3cuIWpXVtng8-wDDvRK-4fUfdeg",
@@ -126,28 +126,24 @@
             } else { if (callback) callback(); }
         }
 
-        // --- SES İZİN SİSTEMİ ---
+        // --- SES VE TİTREŞİM MOTORU ---
         let audioCtx = null;
         function enableSound() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
             if (audioCtx.state === 'suspended') audioCtx.resume();
             document.getElementById('enable-sound-btn').style.display = 'none';
-            playRingtone(); // Test için bir kere çal
+            playRingtone(); // Test zili
             if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-            statusText.innerText = "Sesler hazır! Zeynep'i bekliyorum...";
+            statusText.innerText = "Sesler hazır!";
         }
 
         let ringtoneInterval;
         function playRingtone() {
             if (!audioCtx || audioCtx.state === 'suspended') return;
             try {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
                 osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(440, audioCtx.currentTime);
                 osc.frequency.setValueAtTime(480, audioCtx.currentTime + 0.2);
                 gain.gain.setValueAtTime(0, audioCtx.currentTime);
                 gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
@@ -159,12 +155,8 @@
         function startRinging() {
             playRingtone();
             ringtoneInterval = setInterval(playRingtone, 1000);
-            if (navigator.vibrate) {
-                // Titreşim deseni: 1 saniye titret, yarım saniye dur...
-                navigator.vibrate([1000, 500, 1000, 500, 1000, 500, 1000]); 
-            }
+            if (navigator.vibrate) navigator.vibrate([1000, 500, 1000, 500, 1000, 500, 1000]); 
         }
-        
         function stopRinging() {
             clearInterval(ringtoneInterval);
             if (navigator.vibrate) navigator.vibrate(0);
@@ -183,9 +175,14 @@
         const localVideo = document.getElementById('local-video');
         const remoteVideo = document.getElementById('remote-video');
 
-        const callDocRef = ref(db, 'arama/zeynep-odasi');
-        const offerCandidates = ref(db, 'arama/zeynep-odasi/offerCandidates');
-        const answerCandidates = ref(db, 'arama/zeynep-odasi/answerCandidates');
+        // Herkesin kendine ait bir odası var
+        const myId = window.location.search.includes('receiver=true') ? 'baba' : 'zeynep';
+        const otherId = myId === 'baba' ? 'zeynep' : 'baba';
+
+        const myDocRef = ref(db, 'arama/' + myId);
+        const otherDocRef = ref(db, 'arama/' + otherId);
+        const offerCandidates = ref(db, 'arama/' + myId + '/offerCandidates');
+        const answerCandidates = ref(db, 'arama/' + myId + '/answerCandidates');
 
         async function startCamera() {
             try {
@@ -199,13 +196,15 @@
             }
         }
 
+        // --- ARAMA BAŞLATAN (Her iki taraf da yapabilir) ---
         window.startCall = async function() {
             statusText.innerText = "Kamera açılıyor...";
-            speak("Baban aranıyor, lütfen bekle.");
+            speak("Aranıyor, lütfen bekle.");
+            
             const ready = await startCamera();
             if (!ready) return;
 
-            statusText.innerText = "Baban aranıyor...";
+            statusText.innerText = "Aranıyor...";
             callBtn.disabled = true;
             callBtn.style.opacity = "0.5";
 
@@ -220,43 +219,47 @@
 
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
-                    set(ref(db, 'arama/zeynep-odasi/offerCandidates/' + Date.now()), event.candidate.toJSON());
+                    set(ref(db, 'arama/' + otherId + '/answerCandidates/' + Date.now()), event.candidate.toJSON());
                 }
             };
 
             const offerDescription = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offerDescription);
-            await set(callDocRef, { offer: { sdp: offerDescription.sdp, type: offerDescription.type } });
+            
+            // Karşı tarafın odasına teklif bırak
+            await set(otherDocRef, { offer: { sdp: offerDescription.sdp, type: offerDescription.type }, caller: myId });
 
             callTimeout = setTimeout(() => {
                 if (peerConnection && !peerConnection.currentRemoteDescription) {
-                    speak("Baban telefonu açmadı. Daha sonra tekrar dene.");
+                    speak("Telefon açılmadı. Daha sonra tekrar dene.");
                     statusText.innerText = "Açılmadı, iptal edildi.";
                     endCall();
                 }
             }, 15000);
 
-            onValue(callDocRef, (snapshot) => {
+            // Karşı tarafın cevabını dinle
+            onValue(otherDocRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data && data.rejected) {
-                    speak("Baban aramayı reddetti.");
+                    speak("Arama reddedildi.");
                     statusText.innerText = "Reddedildi.";
                     endCall();
                 } else if (data && data.answer && peerConnection && !peerConnection.currentRemoteDescription) {
                     peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
                     statusText.innerText = "Bağlantı kuruldu!";
-                    speak("Bağlantı kuruldu.");
                     if(callTimeout) clearTimeout(callTimeout);
                 }
             });
 
-            onValue(answerCandidates, (snapshot) => {
+            // Karşı tarafın ICE adaylarını dinle
+            onValue(ref(db, 'arama/' + otherId + '/offerCandidates'), (snapshot) => {
                 snapshot.forEach((childSnapshot) => {
                     peerConnection.addIceCandidate(new RTCIceCandidate(childSnapshot.val()));
                 });
             });
         };
 
+        // --- ARAMAYI YANITLAYAN ---
         window.answerCall = async function() {
             stopRinging();
             statusText.innerText = "Kamera açılıyor...";
@@ -279,19 +282,22 @@
 
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
-                    set(ref(db, 'arama/zeynep-odasi/answerCandidates/' + Date.now()), event.candidate.toJSON());
+                    set(ref(db, 'arama/' + otherId + '/offerCandidates/' + Date.now()), event.candidate.toJSON());
                 }
             };
 
-            onValue(callDocRef, async (snapshot) => {
+            // Kendi odama gelen teklifi al ve cevapla
+            onValue(myDocRef, async (snapshot) => {
                 const data = snapshot.val();
-                if (data && data.offer && !peerConnection.currentRemoteDescription) {
+                if (data && data.offer && !peerConnection.currentRemoteDescription && !data.answer) {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                     const answerDescription = await peerConnection.createAnswer();
                     await peerConnection.setLocalDescription(answerDescription);
-                    await set(callDocRef, { ...data, answer: { type: answerDescription.type, sdp: answerDescription.sdp } });
                     
-                    onValue(offerCandidates, (snap) => {
+                    // Cevabı kendi odama yaz ki karşı taraf okusun
+                    await set(myDocRef, { ...data, answer: { type: answerDescription.type, sdp: answerDescription.sdp } });
+                    
+                    onValue(ref(db, 'arama/' + otherId + '/answerCandidates'), (snap) => {
                         snap.forEach((childSnapshot) => {
                             peerConnection.addIceCandidate(new RTCIceCandidate(childSnapshot.val()));
                         });
@@ -304,10 +310,10 @@
             stopRinging();
             statusText.innerText = "Reddedildi.";
             answerButtons.style.display = 'none';
-            await set(callDocRef, { rejected: true }); 
+            await set(myDocRef, { rejected: true }); 
             setTimeout(() => {
-                remove(callDocRef);
-                statusText.innerText = "Bekleniyor...";
+                remove(myDocRef);
+                statusText.innerText = "Hazır";
             }, 2000);
         };
 
@@ -322,7 +328,7 @@
             videoScreen.style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
             
-            await remove(callDocRef);
+            await remove(myDocRef);
             
             callBtn.disabled = false;
             callBtn.style.opacity = "1";
@@ -331,38 +337,29 @@
             callBtn.style.display = 'flex';
         };
 
-        // --- GELEN ARAMALARI DİNLE ---
-        const isReceiver = window.location.search.includes('receiver=true');
+        // --- GELEN ARAMALARI DİNLE (Herkes dinler) ---
+        document.getElementById('enable-sound-btn').style.display = 'block';
         
-        if (isReceiver) {
-            callBtn.style.display = 'none';
-            document.getElementById('enable-sound-btn').style.display = 'block'; // Sesi açma butonunu göster
-            statusText.innerText = "Lütfen sesi etkinleştirin";
-            
-            onValue(callDocRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.offer && !data.answer && !data.rejected) {
-                    statusText.innerText = "Zeynep arıyor!";
-                    answerButtons.style.display = 'flex';
-                    
-                    if (!window.isRinging) {
-                        window.isRinging = true;
-                        startRinging();
-                        speak("Zeynep seni arıyor.");
-                    }
-                } else {
-                    answerButtons.style.display = 'none';
-                    if (window.isRinging) {
-                        stopRinging();
-                        window.isRinging = false;
-                        statusText.innerText = "Bekleniyor...";
-                    }
+        onValue(myDocRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.offer && !data.answer && !data.rejected) {
+                statusText.innerText = myId === 'baba' ? "Zeynep arıyor!" : "Baban arıyor!";
+                answerButtons.style.display = 'flex';
+                
+                if (!window.isRinging) {
+                    window.isRinging = true;
+                    startRinging();
+                    speak(myId === 'baba' ? "Zeynep seni arıyor." : "Baban seni arıyor.");
                 }
-            });
-        } else {
-            answerButtons.style.display = 'none';
-            statusText.innerText = "Hazır";
-        }
+            } else {
+                answerButtons.style.display = 'none';
+                if (window.isRinging) {
+                    stopRinging();
+                    window.isRinging = false;
+                    statusText.innerText = "Hazır";
+                }
+            }
+        });
     </script>
 </body>
 </html>
